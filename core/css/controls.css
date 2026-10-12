@@ -1,0 +1,267 @@
+/* ============================================================
+   [FILE: core/css/controls.css]
+   Назначение: структура нижней панели. Позиционирование,
+   размеры, grid/flex, поведение при нажатии. Без цветов,
+   градиентов, теней, скруглений — они в game/css/theme.css.
+   ============================================================ */
+
+
+/* ============================================================
+   [BLOCK: bottom-row]
+   ============================================================ */
+.bottom-row {
+  flex: 0 0 auto;
+
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: var(--bottom-h);
+
+  width: 100%;
+  height: var(--bottom-h);
+
+  padding: 0 var(--safe-pad);
+  margin-top: 0;   /* ← отступ даёт gap в game-wrapper */
+
+  gap: var(--gap-sm);
+}
+
+
+/* ============================================================
+   [BLOCK: dpad]
+   Крестовина.
+   Верх: ▲ на всю ширину.
+   Низ:  ▼ на всю ширину.
+   Середина: ◀ и ▶ делят ширину пополам.
+   ============================================================ */
+.dpad {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows:    auto auto auto;
+  gap: 4px;
+
+  width:  var(--dpad-size);
+  height: auto;
+
+  align-self: center;
+  justify-self: center;
+
+  touch-action: none;
+  user-select: none;
+}
+
+/* Верхняя кнопка — на две колонки */
+.dpad-up {
+  grid-column: 1 / 3;
+  grid-row: 1;
+  height: calc(var(--dpad-size) / 3);
+}
+
+/* Средний ряд: ◀ в первой колонке, ▶ во второй */
+.dpad-left {
+  grid-column: 1;
+  grid-row: 2;
+  height: calc(var(--dpad-size) / 3);
+}
+
+.dpad-right {
+  grid-column: 2;
+  grid-row: 2;
+  height: calc(var(--dpad-size) / 3);
+}
+
+/* Нижняя кнопка — на две колонки */
+.dpad-down {
+  grid-column: 1 / 3;
+  grid-row: 3;
+  height: calc(var(--dpad-size) / 3);
+}
+
+
+/* ============================================================
+   [BLOCK: dpad-btn]
+   ============================================================ */
+.dpad-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 100%;
+  height: 100%;
+
+  padding: 0;
+
+  cursor: pointer;
+  touch-action: none;
+  user-select: none;
+
+  transition:
+    transform var(--t-fast),
+    background var(--t-fast),
+    box-shadow var(--t-fast),
+    color var(--t-fast);
+}
+
+.dpad-btn:active,
+.dpad-btn.pressed {
+  transform: translateY(2px);
+}
+
+
+/* ============================================================
+   [BLOCK: dpad-icon]
+   SVG-треугольник внутри кнопки.
+   Для ◀ ▶ — крупный (70%).
+   Для ▲ ▼ — приплюснутый по высоте, чтобы не растягивался
+   на всю ширину кнопки.
+   ============================================================ */
+.dpad-icon {
+  display: block;
+  width: 60%;
+  height: 60%;
+  pointer-events: none;
+}
+
+.dpad-up .dpad-icon,
+.dpad-down .dpad-icon {
+  width: 30%;
+  height: 45%;
+}
+
+.dpad-left .dpad-icon,
+.dpad-right .dpad-icon {
+  width: 55%;
+  height: 55%;
+}
+
+
+/* ============================================================
+   [BLOCK: bottom-right]
+   Правая колонка: BEST, SCORE, TIMER. Вертикальный стек.
+   ============================================================ */
+.bottom-right {
+  position: relative;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: stretch;
+
+  width: 100%;
+  height: 100%;
+
+  gap: var(--gap-xs);
+
+  overflow: hidden;
+}
+
+/* ============================================================
+   [BLOCK: stat-row]
+   Строка в правой колонке нижней панели.
+   Метка слева, значение справа.
+   ============================================================ */
+.stat-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 6px;
+
+  width: 100%;
+  padding: var(--pad-panel-y) var(--pad-panel-x);
+
+  font-size: clamp(10px, 2.8vw, 14px);
+  font-weight: bold;
+  line-height: 1.2;
+  letter-spacing: 1px;
+  white-space: nowrap;
+
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.stat-label {
+  text-align: left;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.stat-value {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.stat-icon {
+  display: block;
+  width: 1.2em;
+  height: 1.2em;
+  object-fit: contain;
+}
+
+/* ============================================================
+   [BLOCK: timer-box]
+   Таймер. Без иконки, без обводки.
+   ============================================================ */
+.timer-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: var(--pad-panel-y) var(--pad-panel-x);
+
+  font-size: clamp(18px, 5vw, 28px);
+  font-weight: 900;
+  letter-spacing: 2px;
+  white-space: nowrap;
+}
+
+.timer-box.danger {
+  animation: timer-pulse 1s ease-in-out infinite;
+}
+
+@keyframes timer-pulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.6; }
+}
+
+/* ============================================================
+   [BLOCK: pause-btn]
+   Кнопка паузы в правой панели, под строками счёта.
+   ============================================================ */
+.pause-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 100%;
+
+  padding: var(--pad-panel-y) var(--pad-panel-x);
+
+  border: none;
+
+  font-family: inherit;
+  font-size: clamp(10px, 3vw, 14px);
+  font-weight: 900;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  white-space: nowrap;
+
+  cursor: pointer;
+  touch-action: manipulation;
+
+  transition:
+    transform var(--t-fast),
+    background var(--t-fast),
+    box-shadow var(--t-fast),
+    color var(--t-fast);
+}
+
+.pause-btn:active {
+  transform: translateY(2px);
+}
+
+.pause-btn.hidden {
+  display: none;
+}

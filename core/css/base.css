@@ -1,0 +1,140 @@
+/* ============================================================
+   [FILE: core/css/base.css]
+   Назначение: reset, структурные переменные, html/body, утилиты.
+   Без стилистики — цвета, шрифты, тени, радиусы задаются игрой
+   в game/css/theme.css.
+   ============================================================ */
+
+
+/* ============================================================
+   [BLOCK: reset]
+   ============================================================ */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+
+/* ============================================================
+   [BLOCK: structural-tokens]
+   Только то, что описывает структуру и тайминги.
+   Никаких цветов, шрифтов, скруглений — они в theme.css.
+   ============================================================ */
+:root {
+
+  /* ---------- Отступы между блоками ---------- */
+  --gap-xs:   clamp(4px, 0.8vw, 5px);
+  --gap-sm: clamp(16px, 4vw, 28px);
+  --gap-md:   clamp(6px, 1.8vw, 12px);
+  --gap-lg:   clamp(10px, 2.5vw, 18px);
+
+  /* ---------- Внутренние отступы панелей ---------- */
+  --pad-panel-y: clamp(5px, 1.4vw, 9px);
+  --pad-panel-x: clamp(8px, 2vw, 14px);
+
+  /* ---------- Размеры ключевых блоков ---------- */
+  --wrapper-pad:  clamp(4px, 1vw, 10px);
+  --header-h: clamp(36px, 9vw, 52px);
+  --dpad-size:    clamp(150px, 38vw, 200px);
+  --bottom-pad-y: 6px;
+  --bottom-h:     calc(var(--dpad-size) + var(--bottom-pad-y) * 2);
+  --safe-pad: clamp(10px, 3vw, 16px);
+
+  /* ---------- Тайминги анимаций ---------- */
+  --t-fast:   0.07s;
+  --t-base:   0.3s;
+  --t-pop:    0.4s;
+}
+
+
+/* ============================================================
+   [BLOCK: html-body]
+   Структура и запрет скролла. Без фонового цвета и шрифта —
+   их задаёт игра.
+   ============================================================ */
+html,
+body {
+  width: 100%;
+  height: 100dvh;
+  overflow: hidden;
+  overscroll-behavior: none;
+  position: fixed;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+
+/* ============================================================
+   [BLOCK: helpers]
+   ============================================================ */
+.hidden {
+  display: none !important;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+
+/* ============================================================
+   [BLOCK: focus]
+   Структура фокуса. Цвет — в theme.css через :focus-visible.
+   ============================================================ */
+:focus-visible {
+  outline: 2px solid;
+  outline-offset: 3px;
+}
+
+
+/* ============================================================
+   [BLOCK: reduced-motion]
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ============================================================
+   [BLOCK: force-portrait]
+   На мобильных в ландшафте разворачиваем весь body на 90°.
+   Игра всегда выглядит вертикальной.
+   ============================================================ */
+@media (orientation: landscape) and (max-height: 500px) {
+  html {
+    width: 100vh;
+    height: 100vw;
+    overflow: hidden;
+  }
+
+  body {
+    width: 100vh;
+    height: 100vw;
+    transform: rotate(90deg) translateY(-100%);
+    transform-origin: top left;
+    overflow: hidden;
+  }
+}

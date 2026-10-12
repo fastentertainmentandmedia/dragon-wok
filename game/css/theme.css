@@ -1,0 +1,522 @@
+/* ============================================================
+   [FILE: game/css/theme.css]
+   Вся стилистика игры: цвета, градиенты, тени, свечения,
+   скругления, шрифты. Структура приходит из core/css/*.
+   Тема: светлая, лёгкая, серо-жемчужная — «японский карп кои».
+   ============================================================ */
+
+
+/* ============================================================
+   [BLOCK: tokens]
+   Единые значения темы. Меняешь здесь — меняется во всей игре.
+   ============================================================ */
+:root {
+
+  /* ---------- Цвета фона и каркаса ---------- */
+  --color-bg-deep:        #eceae6;   
+  --color-bg-wrapper-1:   #f6f4f0;   
+  --color-bg-wrapper-2:   #e8e5df;   
+  --color-bg-panel:       #fbfaf8;   
+  --color-bg-field:       #f4f2ee;   
+
+  /* ---------- Акценты ---------- */
+  --color-gold:           #9aa0a6;   
+  --color-gold-bright:    #c9ced4;   
+  --color-gold-deep:      #6b7076;   
+
+  --color-orange:         #e8a17a;   
+  --color-orange-glow:    #f3c6a8;   
+
+  --color-warning: #d87a0f; 
+  --color-red:            #d97b7b;   
+  --color-red-deep:       #a85a5a;   
+
+  --color-green:          #73b871;   
+  --color-green-bright:   #69b15c;   
+  --color-green-deep:     #6d856c;   
+
+  /* ---------- Текст ---------- */
+  --color-text-main:      #262729;   
+  --color-text-dim:       #b9450fb7;   
+  --color-text-warm:      #5a5450;   
+  --color-text-accent:    #2a2c2e;   
+
+  /* ---------- Скругления ---------- */
+  --radius-sm:   4px;
+  --radius-md:   8px;
+  --radius-lg:   14px;
+  --radius-pill: 40px;
+
+  /* ---------- Шрифт ---------- */
+  --font-mono: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+
+/* ============================================================
+   [BLOCK: html-body]
+   Фон и шрифт всей страницы.
+   ============================================================ */
+body {
+  background-color: var(--color-bg-deep);
+  font-family: var(--font-mono);
+  color: var(--color-text-main);
+}
+
+
+/* ============================================================
+   [BLOCK: focus]
+   ============================================================ */
+:focus-visible {
+  outline-color: var(--color-orange);
+}
+
+
+/* ============================================================
+   [BLOCK: game-wrapper]
+   Фон игрового каркаса.
+   ============================================================ */
+.game-wrapper {
+  background-image: linear-gradient(
+    135deg,
+    var(--color-bg-wrapper-1) 0%,
+    var(--color-bg-wrapper-2) 100%
+  );
+}
+
+
+/* ============================================================
+   [BLOCK: header]
+   ============================================================ */
+.header {
+  color: var(--color-text-main);
+}
+
+/* ============================================================
+   [BLOCK: header-brand]
+   ============================================================ */
+.header-brand {
+  font-size: clamp(16px, 4vw, 22px);
+  font-weight: 900;
+  letter-spacing: 4px;
+  color: var(--color-text-accent);
+  text-shadow:
+    0 0 1px var(--color-orange-glow),
+    1px 1px 0 #000;
+}
+
+/* ============================================================
+   [BLOCK: intro-brand]
+   Логотип внутри intro-модалки. Крупнее, чем в шапке.
+   ============================================================ */
+.intro-content .header-brand {
+  margin-bottom: 20px;
+  padding: 0;
+}
+
+.intro-content .header-logo {
+  max-height: 80px;
+  width: auto;
+}
+
+/* ============================================================
+   [BLOCK: canvas]
+   ============================================================ */
+canvas {
+  background-color: var(--color-bg-field);
+  border-radius: var(--radius-md);
+
+  box-shadow:
+    0 0 8px var(--color-orange),
+    0 0 20px rgba(232, 161, 122, 0.35),
+    0 0 40px rgba(154, 160, 166, 0.18),
+    inset 0 0 12px rgba(154, 160, 166, 0.12);
+}
+
+
+/* ============================================================
+   [BLOCK: dpad-btn]
+   Азиатский стиль: слоновая кость, тёмно-красный акцент,
+   деревянные тени, тонкая золотая обводка.
+   ============================================================ */
+.dpad-btn {
+  border: 2px solid #8b6f3a;
+  border-radius: 6px;
+
+  background:
+    linear-gradient(180deg, #f5ecd7 0%, #e8dcc0 55%, #d9c9a4 100%);
+
+  color: #5c1a1a;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.85);
+
+  box-shadow:
+    /* внешняя тень — как будто кнопка стоит на дереве */
+    0 3px 0 #7a5c2e,
+    0 4px 6px rgba(60, 40, 20, 0.35),
+    /* внутренние тени — придают объём */
+    inset 0 2px 3px rgba(255, 255, 255, 0.75),
+    inset 0 -2px 4px rgba(120, 90, 50, 0.25),
+    /* тонкая золотая линия внутри */
+    inset 0 0 0 1px rgba(200, 168, 106, 0.5);
+}
+
+.dpad-btn:active,
+.dpad-btn.pressed {
+  background:
+    linear-gradient(180deg, #e8dcc0 0%, #d9c9a4 100%);
+
+  color: #8b1a1a;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.6);
+
+  box-shadow:
+    0 1px 0 #7a5c2e,
+    0 2px 3px rgba(60, 40, 20, 0.3),
+    inset 0 2px 4px rgba(120, 90, 50, 0.35),
+    inset 0 0 0 1px rgba(200, 168, 106, 0.7),
+    0 0 14px rgba(200, 60, 40, 0.45);
+}
+
+
+/* ============================================================
+   [BLOCK: stat-row]
+   ============================================================ */
+.stat-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  color: var(--color-text-dim);
+  font-size: 0.95em;
+  font-family: var(--font-mono);
+  padding: 4px 0;
+}
+
+.stat-label {
+  color: var(--color-text-dim);
+}
+
+.stat-value {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+
+  color: var(--color-text-accent);
+  font-weight: 900;
+  font-size: 1.15em;
+  font-family: var(--font-mono);
+}
+
+.stat-icon {
+  width: 1.1em;
+  height: 1.1em;
+  object-fit: contain;
+  filter: drop-shadow(0 0 4px var(--color-orange-glow));
+}
+
+
+/* ============================================================
+   [BLOCK: timer-box]
+   ============================================================ */
+.timer-box {
+  color: var(--color-green-bright);
+  text-shadow: 0 0 1px var(--color-green);
+  font-size: 1.1em;
+  font-weight: 900;
+  letter-spacing: 1px;
+}
+
+.timer-box.warning {
+  color: var(--color-warning);
+  text-shadow: 0 0 1px var(--color-orange-glow);
+  font-size: 1.15em;
+}
+
+.timer-box.danger {
+  color: var(--color-red);
+  text-shadow: 0 0 1px var(--color-red-deep);
+  font-size: 1.25em;
+}
+
+/* ============================================================
+   [BLOCK: pause-btn]
+   Тот же визуальный стиль, что и .dpad-btn — слоновая кость,
+   деревянные тени, тонкая золотая линия.
+   ============================================================ */
+.pause-btn {
+  width: 100%;
+  padding: 10px 12px;
+
+  border: 2px solid #8b6f3a;
+  border-radius: 6px;
+
+  background:
+    linear-gradient(180deg, #f5ecd7 0%, #e8dcc0 55%, #d9c9a4 100%);
+
+  color: #5c1a1a;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.85);
+
+  font-family: var(--font-mono);
+  font-size: 1em;
+  font-weight: 900;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  text-align: center;
+
+  box-shadow:
+    0 3px 0 #7a5c2e,
+    0 4px 6px rgba(60, 40, 20, 0.35),
+    inset 0 2px 3px rgba(255, 255, 255, 0.75),
+    inset 0 -2px 4px rgba(120, 90, 50, 0.25),
+    inset 0 0 0 1px rgba(200, 168, 106, 0.5);
+
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.pause-btn:active {
+  background:
+    linear-gradient(180deg, #e8dcc0 0%, #d9c9a4 100%);
+
+  color: #8b1a1a;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.6);
+
+  box-shadow:
+    0 1px 0 #7a5c2e,
+    0 2px 3px rgba(60, 40, 20, 0.3),
+    inset 0 2px 4px rgba(120, 90, 50, 0.35),
+    inset 0 0 0 1px rgba(200, 168, 106, 0.7),
+    0 0 14px rgba(200, 60, 40, 0.45);
+}
+
+
+/* ============================================================
+   [BLOCK: touch-hint]
+   ============================================================ */
+.touch-hint {
+  background-color: rgba(251, 250, 248, 0.95);
+  color: var(--color-text-warm);
+
+  border: 3px solid var(--color-orange);
+  border-radius: var(--radius-lg);
+  font-family: var(--font-mono);
+  font-size: clamp(20px, 5.5vw, 32px);
+  font-weight: 900;
+  line-height: 1.6;
+  letter-spacing: 2px;
+  text-align: center;
+
+  text-shadow: 0 1px 0 #ffffff;
+
+  box-shadow:
+    0 0 40px rgba(232, 161, 122, 0.45),
+    inset 0 0 30px rgba(232, 161, 122, 0.12);
+}
+
+.touch-hint small {
+  font-size: 0.55em;
+  letter-spacing: 3px;
+  opacity: 0.9;
+  color: var(--color-text-dim);
+}
+
+/* ============================================================
+   [BLOCK: hint-limit]
+   Тёплая кремовая палитра, как в intro-модалке.
+   Иерархия: заголовок → рекорд → тело.
+   ============================================================ */
+body[data-hint="limit"] .touch-hint {
+  background-color: rgba(251, 248, 240, 0.97);
+
+  border: 3px solid var(--color-orange);
+  border-radius: var(--radius-lg);
+
+  color: var(--color-text-main);
+
+  box-shadow:
+    0 0 40px rgba(232, 161, 122, 0.35),
+    0 0 80px rgba(154, 160, 166, 0.2),
+    inset 0 0 30px rgba(255, 255, 255, 0.6);
+}
+
+
+/* ============================================================
+   [BLOCK: hint-limit-title]
+   Заголовок — крупный, как .intro-title.
+   ============================================================ */
+body[data-hint="limit"] .hint-limit-title {
+  font-family: var(--font-mono);
+  font-size: clamp(20px, 5vw, 28px);
+  font-weight: 900;
+  letter-spacing: .5px;
+
+  color: var(--color-text-warm);
+  text-shadow: 0 1px 0 #ffffff;
+
+  margin-bottom: 2px;
+}
+
+
+/* ============================================================
+   [BLOCK: hint-limit-record]
+   Рекорд — как .intro-rules по размеру.
+   ============================================================ */
+body[data-hint="limit"] .hint-limit-record {
+  font-family: var(--font-mono);
+  font-size: clamp(18px, 3.4vw, 20px);
+
+  color: var(--color-text-dim);
+  letter-spacing: 0.5px;
+
+  margin-bottom: 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(139, 111, 58, 0.25);
+}
+
+body[data-hint="limit"] #limitBestScore {
+  font-size: 1.3em;
+  font-weight: 900;
+  color: var(--color-text-dim);
+  margin-left: 4px;
+}
+
+
+/* ============================================================
+   [BLOCK: hint-limit-body]
+   ============================================================ */
+body[data-hint="limit"] .hint-limit-body {
+  font-family: var(--font-mono);
+  font-size: clamp(14px, 2.8vw, 18px);
+  font-weight: 500;
+
+  color: var(--color-text-dim);
+  letter-spacing: 0.5px;
+  text-align: center;
+}
+
+body[data-hint="limit"] .hint-limit-body p {
+  margin: 0;
+}
+
+body[data-hint="limit"] .hint-limit-body p + p {
+  margin-top: 6px;
+}
+
+/* ============================================================
+   [BLOCK: rotate-overlay]
+   ============================================================ */
+.rotate-overlay {
+  background-color: var(--color-bg-deep);
+  color: var(--color-text-warm);
+}
+
+.rotate-text {
+  text-shadow: 0 1px 0 #ffffff;
+}
+
+
+/* ============================================================
+   [BLOCK: intro-modal]
+   ============================================================ */
+.intro-modal {
+  background-color: rgba(232, 229, 223, 0.85);
+}
+
+
+/* ============================================================
+   [BLOCK: intro-content]
+   ============================================================ */
+.intro-content {
+  background-image: linear-gradient(
+    135deg,
+    var(--color-bg-wrapper-1) 0%,
+    var(--color-bg-wrapper-2) 100%
+  );
+
+  border: 3px solid var(--color-orange);
+  border-radius: var(--radius-lg);
+
+  box-shadow:
+    0 0 40px rgba(232, 161, 122, 0.35),
+    0 0 80px rgba(154, 160, 166, 0.2),
+    inset 0 0 30px rgba(255, 255, 255, 0.6);
+
+  color: var(--color-text-main);
+}
+
+
+/* ============================================================
+   [BLOCK: intro-title]
+   ============================================================ */
+.intro-title {
+  font-size: clamp(20px, 5vw, 28px);
+  font-family: var(--font-mono);
+  font-weight: 900;
+  letter-spacing: 2px;
+  color: var(--color-text-warm);
+  text-shadow: 0 1px 0 #ffffff;
+}
+
+
+/* ============================================================
+   [BLOCK: intro-rules]
+   ============================================================ */
+.intro-rules {
+  font-size: clamp(13px, 3.4vw, 15px);
+  color: var(--color-text-dim);
+  font-family: var(--font-mono);
+}
+
+.intro-rules li::before {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  color: var(--color-orange);
+}
+
+
+/* ============================================================
+   [BLOCK: intro-cookie]
+   ============================================================ */
+.intro-cookie {
+  font-family: var(--font-mono);
+  font-size: clamp(12px, 2.8vw, 14px);
+  color: var(--color-text-dim);
+}
+
+
+/* ============================================================
+   [BLOCK: intro-accept]
+   ============================================================ */
+.intro-accept {
+  font-family: var(--font-mono);
+  font-size: clamp(14px, 3.6vw, 17px);
+  font-weight: 900;
+  letter-spacing: 2px;
+  color: var(--color-orange-glow);
+  text-transform: uppercase;
+
+  border: 3px solid var(--color-orange);
+  border-radius: var(--radius-pill);
+
+  background-color: #d4242c;
+
+  box-shadow:
+    0 4px 0 #5e0e0e,
+    0 6px 12px rgba(0, 0, 0, 0.5);
+}
+
+.intro-accept:active {
+  background-color: #ff3d3d;
+  box-shadow:
+    0 1px 0 #5e0e0e,
+    0 3px 8px rgba(0, 0, 0, 0.4);
+  transform: translateY(3px);
+}
+
+
+/* ============================================================
+   [BLOCK: mobile]
+   ============================================================ */
+@media (max-width: 520px) {
+  .intro-content {
+    border-radius: var(--radius-md);
+  }
+}
