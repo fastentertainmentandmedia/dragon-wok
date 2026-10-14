@@ -56,7 +56,23 @@ function hidePreloader() {
   document.documentElement.classList.add('ready');
 }
 
-/*
+// ============================================================
+// [BLOCK: goatcounter]
+// Динамическая загрузка GoatCounter. Не требует тега <script>
+// в index.html — грузится из JS после старта приложения.
+// ============================================================
+
+(function loadGoatCounter() {
+  const script = document.createElement('script');
+  script.async = true;
+  script.src = 'https://gc.zgo.at/count.js';
+  script.setAttribute('data-goatcounter', 'https://fastentertainmentandmedia.goatcounter.com/count');
+  script.setAttribute('data-goatcounter-settings', '{"allow_local": true}');
+
+  document.head.appendChild(script);
+})();
+
+
 // ============================================================
 // [BLOCK: metrika]
 // Отложенная загрузка Яндекс.Метрики.
@@ -104,7 +120,7 @@ function hidePreloader() {
     setTimeout(init, 5000);
   }, { once: true });
 })();
-*/
+
 
 // ============================================================
 // [BLOCK: session-counter]

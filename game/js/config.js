@@ -16,7 +16,7 @@ export const config = {
   LIMIT_RESET_HOURS: 4,           
 
   // Ключ хранения игрока (уникальный для каждой игры!)
-  STORAGE_KEY: 'ramen_dragon',
+  STORAGE_KEY: 'dragon_wok',
 
   // Защита от «зависшей» вкладки
   SESSION_FLUSH_TIMEOUT_MS: 60000,
