@@ -58,16 +58,25 @@ function hidePreloader() {
 
 // ============================================================
 // [BLOCK: goatcounter]
-// Динамическая загрузка GoatCounter. Не требует тега <script>
-// в index.html — грузится из JS после старта приложения.
+// Динамическая загрузка GoatCounter.
 // ============================================================
 
 (function loadGoatCounter() {
+  window.goatcounter = {
+    allow_local: true,
+  };
+
   const script = document.createElement('script');
   script.async = true;
-  script.src = 'https://gc.zgo.at/count.js';
-  script.setAttribute('data-goatcounter', 'https://fastentertainmentandmedia.goatcounter.com/count');
-  script.setAttribute('data-goatcounter-settings', '{"allow_local": true}');
+  script.src = 'game/assets/goatcounter/count.js';
+  script.setAttribute(
+    'data-goatcounter',
+    'https://fastentertainmentandmedia.goatcounter.com/count'
+  );
+  script.setAttribute(
+    'data-goatcounter-settings',
+    '{"allow_local": true}'
+  );
 
   document.head.appendChild(script);
 })();
