@@ -51,15 +51,24 @@ export function createIntro({ onAccept }) {
 
 
   function init() {
-    if (alreadyAccepted) {
-      // Согласие уже дано — модалка остаётся скрытой
+    // Флаг "вернулся с privacy.html" — принудительно показать модалку
+    let forceReopen = false;
+    try {
+      forceReopen = sessionStorage.getItem('reopenIntro') === '1';
+      if (forceReopen) {
+        sessionStorage.removeItem('reopenIntro');
+      }
+    } catch (e) {
+      forceReopen = false;
+    }
+
+    if (alreadyAccepted && !forceReopen) {
       modal.classList.add('hidden');
       modal.style.display = 'none';
       onAccept();
       return;
     }
 
-    // Согласия нет — показываем модалку
     modal.classList.remove('hidden');
     modal.style.display = '';
     acceptBtn.addEventListener('click', accept);
