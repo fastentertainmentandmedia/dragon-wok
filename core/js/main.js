@@ -12,7 +12,7 @@ import {
   isReturning,
 } from './player-limits.js';
 
-import { trackGoal, getClient } from './analytics.js';
+import { trackGoal, getClient, setCounterId, setClient } from './analytics.js';
 
 import { state, updateState, resetGameState } from './state.js';
 import { $ } from './dom.js';
@@ -32,8 +32,6 @@ import { createRenderer } from '../../game/js/render.js';
 
 // ============================================================
 // [BLOCK: disable-double-tap-zoom]
-// Safari на iOS игнорирует touch-action: manipulation и
-// user-scalable=no. Перехватываем двойной тап через touchend.
 // ============================================================
 
 let lastTouchEnd = 0;
@@ -49,19 +47,45 @@ document.addEventListener('touchend', (event) => {
 
 // ============================================================
 // [BLOCK: preloader]
-// Прелоадер снимается вручную, когда игра готова.
 // ============================================================
 
 function hidePreloader() {
   document.documentElement.classList.add('ready');
 }
 
+
 // ============================================================
-// [BLOCK: goatcounter]
-// Динамическая загрузка GoatCounter.
+// [BLOCK: analytics-config]
+// Загружаем внешний config.json ДО инициализации счётчиков.
 // ============================================================
 
-(function loadGoatCounter() {
+async function loadAnalyticsConfig() {
+  try {
+    const res = await fetch('./config.json', { cache: 'no-store' });
+    if (!res.ok) throw new Error('config.json not found');
+    const json = await res.json();
+
+    return {
+      yandexMetrikaId: Number(json.yandexMetrikaId) || null,
+      goatcounterUrl: json.goatcounterUrl ? String(json.goatcounterUrl) : null,
+    };
+  } catch (e) {
+    console.warn('[analytics-config] config.json not loaded:', e.message);
+    return {
+      yandexMetrikaId: null,
+      goatcounterUrl: null,
+    };
+  }
+}
+
+
+// ============================================================
+// [BLOCK: goatcounter]
+// ============================================================
+
+function loadGoatCounter(goatcounterUrl) {
+  if (!goatcounterUrl) return;
+
   window.goatcounter = {
     allow_local: true,
   };
@@ -69,27 +93,20 @@ function hidePreloader() {
   const script = document.createElement('script');
   script.async = true;
   script.src = 'game/assets/goatcounter/count.js';
-  script.setAttribute(
-    'data-goatcounter',
-    'https://fastentertainmentandmedia.goatcounter.com/count'
-  );
-  script.setAttribute(
-    'data-goatcounter-settings',
-    '{"allow_local": true}'
-  );
+  script.setAttribute('data-goatcounter', goatcounterUrl);
+  script.setAttribute('data-goatcounter-settings', '{"allow_local": true}');
 
   document.head.appendChild(script);
-})();
+}
 
 
 // ============================================================
 // [BLOCK: metrika]
-// Отложенная загрузка Яндекс.Метрики.
-// Грузим при первом взаимодействии пользователя
-// или через 5 секунд после load — что сработает раньше.
 // ============================================================
 
-(function loadMetrika() {
+function loadMetrika(metrikaId) {
+  if (!metrikaId) return;
+
   let loaded = false;
 
   function init() {
@@ -103,11 +120,12 @@ function hidePreloader() {
         if (document.scripts[j].src === r) { return; }
       }
       k=e.createElement(t), a=e.getElementsByTagName(t)[0];
-      k.async = 1; k.src = r;
+      k.async = 1;
+      k.src = 'https://mc.yandex.ru/metrika/tag.js?id=' + metrikaId;
       a.parentNode.insertBefore(k, a);
-    })(window, document, 'script', 'https://mc.yandex.ru/metrika/tag.js?id=113332587', 'ym');
+    })(window, document, 'script', 'https://mc.yandex.ru/metrika/tag.js?id=' + metrikaId, 'ym');
 
-    window.ym(113332587, 'init', {
+    window.ym(metrikaId, 'init', {
       clickmap: true,
       trackLinks: true,
       accurateTrackBounce: true,
@@ -115,7 +133,6 @@ function hidePreloader() {
     });
   }
 
-  // Триггер 1: первое взаимодействие пользователя
   const onInteraction = () => {
     document.removeEventListener('pointerdown', onInteraction);
     document.removeEventListener('keydown', onInteraction);
@@ -124,16 +141,14 @@ function hidePreloader() {
   document.addEventListener('pointerdown', onInteraction, { once: true });
   document.addEventListener('keydown', onInteraction, { once: true });
 
-  // Триггер 2: страховка через 5 секунд после полной загрузки
   window.addEventListener('load', () => {
     setTimeout(init, 5000);
   }, { once: true });
-})();
+}
 
 
 // ============================================================
 // [BLOCK: session-counter]
-// Счётчик партий за текущую сессию (до перезагрузки страницы).
 // ============================================================
 
 let gamesThisSession = 0;
@@ -143,265 +158,282 @@ let gamesThisSession = 0;
 // [BLOCK: init]
 // ============================================================
 
-initPlayer();
+async function init() {
+  // 1. Загружаем конфиг аналитики
+  const analyticsConfig = await loadAnalyticsConfig();
 
-state.bestScore = getBestScore();
+  // 2. Устанавливаем ID Метрики и client
+  setCounterId(analyticsConfig.yandexMetrikaId);
 
-// Определяем тип игрока и отправляем game_loaded
-const isReturningPlayer = isReturning();
-const client = getClient();
+  const client = getClient();
+  setClient(client);
 
-trackGoal('game_loaded', {
-  type: isReturningPlayer ? 'returning' : 'new',
-  client: client,
-});
+  // 3. Запускаем счётчики
+  loadGoatCounter(analyticsConfig.goatcounterUrl);
+  loadMetrika(analyticsConfig.yandexMetrikaId);
 
-const ui = createUI();
-const rules = createRules();
-const renderer = createRenderer($.canvas, {
-  onImageReady: () => game.render(),
-});
+  // 4. Дальше — обычная инициализация игры
+  initPlayer();
 
-const game = createLoop({
-  rules,
-  renderer,
-  config,
-  callbacks: {
-    onScore: score => updateState({ score }, ui),
+  state.bestScore = getBestScore();
 
-    onStart: () => {
-      gamesThisSession++;
+  const isReturningPlayer = isReturning();
 
-      trackGoal('game_start', {
-        number: gamesThisSession,
-      });
+  trackGoal('game_loaded', {
+    type: isReturningPlayer ? 'returning' : 'new',
+    client: client,
+  });
 
-      updateState({
-        gameStarted: true,
-        gameActive: true,
-        gameOver: false,
-        hintVisible: false,
-      }, ui);
+  const ui = createUI();
+  const rules = createRules();
+  const renderer = createRenderer($.canvas, {
+    onImageReady: () => game.render(),
+  });
+
+  const game = createLoop({
+    rules,
+    renderer,
+    config,
+    callbacks: {
+      onScore: score => updateState({ score }, ui),
+
+      onStart: () => {
+        gamesThisSession++;
+
+        trackGoal('game_start', {
+          number: gamesThisSession,
+        });
+
+        updateState({
+          gameStarted: true,
+          gameActive: true,
+          gameOver: false,
+          hintVisible: false,
+        }, ui);
+      },
+
+      onGameOver: ({ win, score }) => {
+        const isNewRecord = updateBestScore(score);
+
+        trackGoal('game_over', {
+          score,
+          win: win ? 1 : 0,
+          number: gamesThisSession,
+        });
+
+        updateState({
+          gameActive: false,
+          gameStarted: true,
+          gameOver: true,
+          win,
+          ...(isNewRecord ? { bestScore: score } : {}),
+        }, ui);
+      },
+
+      onLimit: ({ score = 0 } = {}) => {
+        const isNewRecord = score > 0 && updateBestScore(score);
+
+        trackGoal('daily_limit_reached', {
+          score,
+          number: gamesThisSession,
+        });
+
+        updateState({
+          limitReached: true,
+          hintVisible: true,
+          hintKind: 'limit',
+          ...(isNewRecord ? { bestScore: score } : {}),
+        }, ui);
+      },
     },
+  });
 
-    onGameOver: ({ win, score }) => {
-      const isNewRecord = updateBestScore(score);
 
-      trackGoal('game_over', {
-        score,
-        win: win ? 1 : 0,
-        number: gamesThisSession,
-      });
-
-      updateState({
-        gameActive: false,
-        gameStarted: true,
-        gameOver: true,
-        win,
-        ...(isNewRecord ? { bestScore: score } : {}),
-      }, ui);
+  createResize({
+    canvas: $.canvas,
+    onResize: (w, h) => {
+      renderer.resize(w, h, config.GRID_SIZE);
+      game.render();
     },
+  });
 
-    onLimit: ({ score = 0 } = {}) => {
-      const isNewRecord = score > 0 && updateBestScore(score);
 
-      trackGoal('daily_limit_reached', {
-        score,
-        number: gamesThisSession,
-      });
+  function handleDirection(dir) {
+    if (!state.gameUnlocked) return;
+    if (state.limitReached) return;
+    if (!state.gameStarted || state.gameOver) return;
 
+    game.setDirection(dir);
+  }
+
+  function handleAction() {
+    // Space / Enter / R больше не запускают игру.
+  }
+
+  function handleTap() {
+    if (!state.gameUnlocked) return;
+    if (state.limitReached) {
+      updateState({ hintVisible: true, hintKind: 'limit' }, ui);
+      return;
+    }
+    if (!state.gameStarted || state.gameOver) {
+      if (state.gameActive) flushSession();
+      resetGameState();
+      state.paused = false;
+      ui.render();
+      game.init();
+    }
+  }
+
+
+  const dpad = createDpad(document.body, {
+    onDirection: handleDirection,
+  });
+
+  const keyboard = createKeyboard({
+    onDirection: handleDirection,
+    onAction:    handleAction,
+  });
+
+  const swipe = createSwipe($.canvas, {
+    onDirection: dir => {
+      if (!state.gameUnlocked) return;
+      if (state.limitReached) return;
+      if (!state.gameStarted || state.gameOver) return;
+      game.setDirection(dir);
+    },
+    onTap: handleTap,
+  });
+
+
+  $.canvas.addEventListener('click', e => {
+    e.preventDefault();
+    handleTap();
+  });
+
+
+  $.pauseButton.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!state.gameUnlocked) return;
+    if (state.limitReached) return;
+
+    if (!state.gameActive || state.gameOver) {
+      if (state.gameActive) flushSession();
+      resetGameState();
+      ui.render();
+      game.init();
+      return;
+    }
+
+    if (game.isPaused()) {
+      game.resume();
+      updateState({ paused: false }, ui);
+    } else {
+      game.pause();
+      updateState({ paused: true }, ui);
+    }
+  });
+
+
+  function unlockGame() {
+    if (state.gameUnlocked) return;
+
+    updateState({
+      gameUnlocked: true,
+      cookiesAccepted: true,
+    }, ui);
+
+    dpad.enable();
+    keyboard.enable();
+    swipe.enable();
+
+    if (isLimitReached()) {
       updateState({
         limitReached: true,
         hintVisible: true,
         hintKind: 'limit',
-        ...(isNewRecord ? { bestScore: score } : {}),
       }, ui);
+    } else {
+      game.showPreview();
+      updateState({
+        hintVisible: true,
+        hintKind: 'start',
+        gameStarted: false,
+        gameActive: false,
+        gameOver: false,
+      }, ui);
+    }
+
+    ui.startTimer(() => game.tickSession());
+    ui.updateTimer();
+  }
+
+
+  const intro = createIntro({
+    onAccept: unlockGame,
+  });
+
+  hidePreloader();
+
+  intro.init();
+
+
+  createLifecycle({
+    isActive: () => state.gameActive,
+    onFlush: flushSession,
+    onHide: () => {
+      game.flushSession();
+      game.render();
     },
-  },
-});
+  });
 
 
-createResize({
-  canvas: $.canvas,
-  onResize: (w, h) => {
-    renderer.resize(w, h, config.GRID_SIZE);
-    game.render();
-  },
-});
-
-
-function handleDirection(dir) {
-  if (!state.gameUnlocked) return;
-  if (state.limitReached) return;
-  if (!state.gameStarted || state.gameOver) return;
-
-  game.setDirection(dir);
-}
-
-function handleAction() {
-  // Space / Enter / R больше не запускают игру.
-  // Сюда можно добавить другие действия в будущем.
-}
-
-function handleTap() {
-  if (!state.gameUnlocked) return;
-  if (state.limitReached) {
-    updateState({ hintVisible: true, hintKind: 'limit' }, ui);
-    return;
-  }
-  if (!state.gameStarted || state.gameOver) {
-    if (state.gameActive) flushSession();
-    resetGameState();
-    state.paused = false;
-    ui.render();
-    game.init();
-  }
-}
-
-
-const dpad = createDpad(document.body, {
-  onDirection: handleDirection,
-});
-
-const keyboard = createKeyboard({
-  onDirection: handleDirection,
-  onAction:    handleAction,
-});
-
-const swipe = createSwipe($.canvas, {
-  onDirection: dir => {
+  setInterval(() => {
     if (!state.gameUnlocked) return;
-    if (state.limitReached) return;
-    if (!state.gameStarted || state.gameOver) return;
-    game.setDirection(dir);
-  },
-  onTap: handleTap,
-});
+
+    if (!state.gameActive && !state.gameStarted && isLimitReached()) {
+      updateState({
+        limitReached: true,
+        hintVisible: true,
+        hintKind: 'limit',
+      }, ui);
+    }
+    ui.updateTimer();
+  }, 30000);
 
 
-$.canvas.addEventListener('click', e => {
-  e.preventDefault();
-  handleTap();
-});
+  $.canvas.addEventListener('contextmenu', e => e.preventDefault());
 
 
-$.pauseButton.addEventListener('click', (e) => {
-  e.preventDefault();
-  e.stopPropagation();
+  (function debugResetLimit() {
+    const isDev =
+      location.hostname === 'localhost' ||
+      location.hostname === '127.0.0.1' ||
+      location.protocol === 'file:';
 
-  if (!state.gameUnlocked) return;
-  if (state.limitReached) return;
+    if (!isDev) return;
 
-  // Игра ещё не начата или закончилась — старт новой партии
-  if (!state.gameActive || state.gameOver) {
-    if (state.gameActive) flushSession();
-    resetGameState();
-    ui.render();
-    game.init();
-    return;
-  }
+    const params = new URLSearchParams(location.search);
+    if (params.get('resetLimit') === '1') {
+      try { localStorage.removeItem(config.STORAGE_KEY); } catch (e) {}
 
-  // Игра идёт — переключить паузу
-  if (game.isPaused()) {
-    game.resume();
-    updateState({ paused: false }, ui);
-  } else {
-    game.pause();
-    updateState({ paused: true }, ui);
-  }
-});
+      params.delete('resetLimit');
+      const newUrl = location.pathname + (params.toString() ? '?' + params : '');
+      history.replaceState({}, '', newUrl);
 
+      console.log('limit dropped',
+        'color:#ff6b1a;font-weight:bold;font-size:14px');
 
-function unlockGame() {
-  if (state.gameUnlocked) return;
-
-  updateState({
-    gameUnlocked: true,
-    cookiesAccepted: true,
-  }, ui);
-
-  dpad.enable();
-  keyboard.enable();
-  swipe.enable();
-
-  if (isLimitReached()) {
-    updateState({
-      limitReached: true,
-      hintVisible: true,
-      hintKind: 'limit',
-    }, ui);
-  } else {
-    game.showPreview();
-    updateState({
-      hintVisible: true,
-      hintKind: 'start',
-      gameStarted: false,
-      gameActive: false,
-      gameOver: false,
-    }, ui);
-  }
-
-  ui.startTimer(() => game.tickSession());
-  ui.updateTimer();
+      location.reload();
+    }
+  })();
 }
 
 
-const intro = createIntro({
-  onAccept: unlockGame,
-});
+// ============================================================
+// Запуск
+// ============================================================
 
-// Снимаем прелоадер ДО intro.init() — иначе модалка под ним
-hidePreloader();
-
-intro.init();
-
-
-createLifecycle({
-  isActive: () => state.gameActive,
-  onFlush: flushSession,
-  onHide: () => {
-    game.flushSession();
-    game.render();
-  },
-});
-
-
-setInterval(() => {
-  if (!state.gameUnlocked) return;
-
-  if (!state.gameActive && !state.gameStarted && isLimitReached()) {
-    updateState({
-      limitReached: true,
-      hintVisible: true,
-      hintKind: 'limit',
-    }, ui);
-  }
-  ui.updateTimer();
-}, 30000);
-
-
-$.canvas.addEventListener('contextmenu', e => e.preventDefault());
-
-
-(function debugResetLimit() {
-  const isDev =
-    location.hostname === 'localhost' ||
-    location.hostname === '127.0.0.1' ||
-    location.protocol === 'file:';
-
-  if (!isDev) return;
-
-  const params = new URLSearchParams(location.search);
-  if (params.get('resetLimit') === '1') {
-    try { localStorage.removeItem(config.STORAGE_KEY); } catch (e) {}
-
-    params.delete('resetLimit');
-    const newUrl = location.pathname + (params.toString() ? '?' + params : '');
-    history.replaceState({}, '', newUrl);
-
-    console.log('limit dropped',
-      'color:#ff6b1a;font-weight:bold;font-size:14px');
-
-    location.reload();
-  }
-})();
+init();
